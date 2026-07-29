@@ -38,15 +38,14 @@ evaluation → SHAP global & local explainability → interactive scorecard →
 serialized model artifact + `predict_startup_success()` inference function.
 
 ## Sample Results
-*(from the built-in synthetic demo dataset — real Crunchbase data will differ)*
+*(trained on real Crunchbase-derived data, ~923 US startups, 2013 snapshot)*
 
 | Metric | Score |
 |---|---|
-| ROC-AUC | 0.582 |
-| PR-AUC | 0.439 |
-| F1 | 0.196 |
-| Brier Score | 0.231 |
-| Precision@50 | 52% (vs. 37.5% base rate) |
+| ROC-AUC | 0.671 |
+| PR-AUC | 0.753 |
+| F1 | 0.703 |
+| Brier Score | 0.213 |
 
 ### Evaluation Dashboard
 ![Evaluation Dashboard](reports/figures/final_evaluation_dashboard.png)
