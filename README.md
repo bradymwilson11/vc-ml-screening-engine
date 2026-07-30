@@ -3,7 +3,7 @@
 An end-to-end, explainable ML pipeline that estimates a startup's probability
 of success (acquisition/IPO vs. shutdown) from funding and company metadata —
 built to mirror how VC firms do ML-assisted deal screening.
-
+🔗 **[Try the live app](https://vc-ml-screening-engine.streamlit.app/)**
 > **Disclaimer:** Startup outcomes are noisy and shaped by unobservable
 > factors. This is a decision-**support** tool for screening/triage, not a
 > substitute for full investment diligence.
