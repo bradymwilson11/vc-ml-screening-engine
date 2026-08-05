@@ -177,6 +177,18 @@ def render_shap_chart(shap_row: pd.Series, top_n: int = 8):
 # Interactive comparison chart: this company vs. real successful/unsuccessful startups
 # -----------------------------------------------------------------------------
 def render_comparison_chart(X_new: pd.DataFrame, bundle: dict):
+    """
+    Shows this company vs. average successful/unsuccessful startups.
+
+    Features are normalized PER-FEATURE (each divided by the largest of the
+    three values for that feature) before plotting. Raw features live on very
+    different scales (e.g. funding velocity is in hundreds of thousands of
+    dollars, while category success rate is a 0-1 fraction) — plotting them
+    on one shared axis would make every non-dollar bar invisible. Normalizing
+    per feature keeps all bars readable while preserving the relative
+    comparison; actual raw values are shown in the hover tooltip and as text
+    labels so no information is lost.
+    """
     stats = bundle.get("feature_stats")
     if not stats:
         return
@@ -193,24 +205,39 @@ def render_comparison_chart(X_new: pd.DataFrame, bundle: dict):
 
     labels = [FEATURE_DISPLAY_NAMES.get(f, f) for f in compare_features]
 
+    this_vals, succ_vals, unsucc_vals = [], [], []
+    this_raw, succ_raw, unsucc_raw = [], [], []
+
+    for f in compare_features:
+        v_this = float(this_company[f])
+        v_succ = float(successful_avg[f])
+        v_unsucc = float(unsuccessful_avg[f])
+
+        denom = max(abs(v_this), abs(v_succ), abs(v_unsucc), 1e-9)
+
+        this_vals.append(v_this / denom)
+        succ_vals.append(v_succ / denom)
+        unsucc_vals.append(v_unsucc / denom)
+
+        this_raw.append(v_this)
+        succ_raw.append(v_succ)
+        unsucc_raw.append(v_unsucc)
+
+    def hover_text(raw_vals):
+        return [f"Actual value: {v:,.3g}" for v in raw_vals]
+
     fig = go.Figure()
     fig.add_trace(go.Bar(
-        name="This Company",
-        x=labels,
-        y=[this_company[f] for f in compare_features],
-        marker_color="#264653",
+        name="This Company", x=labels, y=this_vals,
+        marker_color="#264653", hovertext=hover_text(this_raw), hoverinfo="text+name",
     ))
     fig.add_trace(go.Bar(
-        name="Avg. Successful Startup",
-        x=labels,
-        y=[successful_avg[f] for f in compare_features],
-        marker_color="#2a9d8f",
+        name="Avg. Successful Startup", x=labels, y=succ_vals,
+        marker_color="#2a9d8f", hovertext=hover_text(succ_raw), hoverinfo="text+name",
     ))
     fig.add_trace(go.Bar(
-        name="Avg. Unsuccessful Startup",
-        x=labels,
-        y=[unsuccessful_avg[f] for f in compare_features],
-        marker_color="#e63946",
+        name="Avg. Unsuccessful Startup", x=labels, y=unsucc_vals,
+        marker_color="#e63946", hovertext=hover_text(unsucc_raw), hoverinfo="text+name",
     ))
     fig.update_layout(
         title="How this company compares to real startups in the training data",
@@ -219,12 +246,14 @@ def render_comparison_chart(X_new: pd.DataFrame, bundle: dict):
         height=420,
         margin=dict(l=10, r=10, t=50, b=10),
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        yaxis=dict(title="Relative scale (per-feature normalized)", showticklabels=False),
     )
     st.plotly_chart(fig, use_container_width=True)
     st.caption(
-        "Bars are on each feature's raw scale, so heights aren't directly comparable "
-        "across features — focus on whether this company's bar sits closer to the "
-        "successful or unsuccessful average for each one."
+        "Each feature is scaled independently so all bars stay readable "
+        "(a $2M funding total and a 0-1 success rate can't share one axis). "
+        "Hover over any bar to see the actual value. Focus on whether this "
+        "company's bar sits closer to the successful or unsuccessful average."
     )
 
 
